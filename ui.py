@@ -592,7 +592,12 @@ class PingmakerApp:
     def _on_setting_changed(self, *args):
         self._save_settings()
         if self.is_running:
+            self._sync_logging_state()
             self._hot_reload()
+
+    def _sync_logging_state(self):
+        logs_dir = os.path.join(os.path.dirname(get_settings_path()), "logs")
+        self.engine.set_logging(self.csv_logging.get(), logs_dir)
 
     def _on_char_names_changed(self, *args):
         names = [n.strip() for n in self.char_names_var.get().split(',')
@@ -746,9 +751,8 @@ class PingmakerApp:
         self._log(f"Starting with {len(self.selected_skills)} skills "
                   f"({active} with speed override)")
 
-        # Start packet logging
-        logs_dir = os.path.join(os.path.dirname(get_settings_path()), "logs")
-        self.engine.start_logging(logs_dir)
+        # Start packet logging only when enabled
+        self._sync_logging_state()
 
         # Switch to intercept mode
         self.engine.set_intercepting(True, lookup, target_ids, first_bytes)
@@ -759,6 +763,7 @@ class PingmakerApp:
 
     def _stop_capture(self):
         self.engine.set_intercepting(False)
+        self.engine.set_logging(False)
         self.is_running = False
         self._start_btn.config(text="Start", bg=Style.RED, fg="#ffffff")
         self._set_status("Stopped", Style.TEXT_DIM)

@@ -258,6 +258,17 @@ class CaptureEngine:
         except Exception as e:
             self._emit('log', f"Log error: {e}")
 
+    def set_logging(self, enabled: bool, logs_dir: str = None):
+        """Enable or disable packet JSONL logging."""
+        if enabled:
+            if self._log_writer:
+                return
+            if logs_dir is None:
+                return
+            self.start_logging(logs_dir)
+        else:
+            self._stop_logging()
+
     def _stop_logging(self):
         if self._log_writer:
             self._log_writer.close()
